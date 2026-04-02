@@ -8,8 +8,8 @@
 #include <algorithm>
 
 struct alignas(64) Pair512 {
-    __m512i a[18];
-    __m512i b[18];
+    __m512i a[10];
+    __m512i b[10];
 };
 
 uint64_t rdtscp() ;
