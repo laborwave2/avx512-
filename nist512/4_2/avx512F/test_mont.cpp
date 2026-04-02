@@ -12,7 +12,7 @@ namespace {
 
 // Modulus m = 2^505 - 1 in base 2^29 with a 12-bit top limb, packed as:
 // vec[i] lane = limbs[i] (low32) | limbs[i+9] (high32)
-static alignas(64) const __m512i MOD_P[9] = {
+alignas(64) static const __m512i MOD_P[9] = {
     _mm512_setr_epi64(0x1FFFFFFFULL, 0x1FFFFFFFULL, 0x1FFFFFFFULL, 0x1FFFFFFFULL,
                       0x1FFFFFFFULL, 0x1FFFFFFFULL, 0x1FFFFFFFULL, 0x1FFFFFFFULL),
     _mm512_setr_epi64(0x1FFFFFFFULL, 0x1FFFFFFFULL, 0x1FFFFFFFULL, 0x1FFFFFFFULL,
@@ -106,8 +106,11 @@ static void make_const_limbs18(uint32_t limbs_lane[18][8], const uint32_t limbs[
 }
 
 static bool run_known_cases() {
-    Mpz p, A, B, Ref, Out, OutMod;
+    Mpz p, R, A, B, Ref, Out, OutMod;
     build_modulus(p.v);
+    mpz_set_ui(R.v, 1);
+    mpz_mul_2exp(R.v, R.v, 522);
+    mpz_mod(R.v, R.v, p.v);
 
     const uint32_t zero[18] = {};
     uint32_t one[18] = {};
@@ -155,6 +158,8 @@ static bool run_known_cases() {
 
             limbs18_to_mpz_base29_top12(Out.v, out_limbs);
             mpz_mod(OutMod.v, Out.v, p.v);
+            mpz_mul(OutMod.v, OutMod.v, R.v);
+            mpz_mod(OutMod.v, OutMod.v, p.v);
 
             if (mpz_cmp(OutMod.v, Ref.v) != 0) {
                 char* ref_str = mpz_get_str(nullptr, 16, Ref.v);
@@ -177,8 +182,11 @@ static bool run_known_cases() {
 static bool run_random(std::size_t iterations, uint64_t seed) {
     std::mt19937_64 rng(seed);
 
-    Mpz p, A, B, Ref, Out, OutMod;
+    Mpz p, R, A, B, Ref, Out, OutMod;
     build_modulus(p.v);
+    mpz_set_ui(R.v, 1);
+    mpz_mul_2exp(R.v, R.v, 522);
+    mpz_mod(R.v, R.v, p.v);
 
     for (std::size_t it = 0; it < iterations; ++it) {
         uint32_t a_lane[18][8], b_lane[18][8];
@@ -215,6 +223,8 @@ static bool run_random(std::size_t iterations, uint64_t seed) {
 
             limbs18_to_mpz_base29_top12(Out.v, out_limbs);
             mpz_mod(OutMod.v, Out.v, p.v);
+            mpz_mul(OutMod.v, OutMod.v, R.v);
+            mpz_mod(OutMod.v, OutMod.v, p.v);
 
             if (mpz_cmp(OutMod.v, Ref.v) != 0) {
                 std::cerr << "[FAIL][4_2 avx512F] it=" << it << " lane=" << lane << " mismatch\n";

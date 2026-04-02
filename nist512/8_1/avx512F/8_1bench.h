@@ -20,6 +20,7 @@ void cpuid_serialize() ;
 void pin_to_core(int core);
 
 std::vector<Pair512> make_random_pairs512(size_t N, uint64_t seed = 42);
+void bench_vs_gmp_8_1_avx512F(size_t N = 2000, uint64_t seed = 42);
 
 template<typename F>
 void bench_cycles_512(const char* name, F&& f, const std::vector<Pair512>& vec, int rounds = 100)
