@@ -44,36 +44,16 @@ void mod4_2(__m512i in[27], __m512i out[9], const __m512i P[9]){
    for (int k = 0; k < 9;k++){
       out[k] = in[k + 18];
    }
-   for (int i = 0; i < 2;i++){
-      for (int j = 0; j < 8;j++){
+   for (int i = 0; i < 2; i++) {
+      for (int j = 0; j < 8; j++) {
          __m512i C = _mm512_srli_epi64(out[j], 29);
          out[j] = _mm512_and_epi64(out[j], MASK29);
          out[j + 1] = _mm512_add_epi64(out[j + 1], C);
       }
+      __m512i C = _mm512_srli_epi64(out[8], 29);
+      out[8] = _mm512_and_epi64(out[8], MASK29);
+      out[0] = _mm512_mask_add_epi64(out[0], 0xAA, out[0], _mm512_shuffle_epi32(C, static_cast<_MM_PERM_ENUM>(0x4E)));
    }
-   __m512i C = _mm512_srli_epi64(out[8], 29);
-   out[8] = _mm512_and_epi64(out[8], MASK29);
-   out[0] = _mm512_mask_add_epi64(out[0], 0xAA, out[0], _mm512_shuffle_epi32(C, static_cast<_MM_PERM_ENUM>(0x4E)));
-
-   // final normalization after folding carry into out[0]
-   for (int j = 0; j < 8; j++) {
-      __m512i C2 = _mm512_srli_epi64(out[j], 29);
-      out[j] = _mm512_and_epi64(out[j], MASK29);
-      out[j + 1] = _mm512_add_epi64(out[j + 1], C2);
-   }
-   __m512i C3 = _mm512_srli_epi64(out[8], 29);
-   out[8] = _mm512_and_epi64(out[8], MASK29);
-   out[0] = _mm512_mask_add_epi64(out[0], 0xAA, out[0], _mm512_shuffle_epi32(C3, static_cast<_MM_PERM_ENUM>(0x4E)));
-
-   // one more carry sweep to ensure canonical limbs
-   for (int j = 0; j < 8; j++) {
-      __m512i C4 = _mm512_srli_epi64(out[j], 29);
-      out[j] = _mm512_and_epi64(out[j], MASK29);
-      out[j + 1] = _mm512_add_epi64(out[j + 1], C4);
-   }
-   __m512i C5 = _mm512_srli_epi64(out[8], 29);
-   out[8] = _mm512_and_epi64(out[8], MASK29);
-   out[0] = _mm512_mask_add_epi64(out[0], 0xAA, out[0], _mm512_shuffle_epi32(C5, static_cast<_MM_PERM_ENUM>(0x4E)));
 }
 
 void mulmod4_2(__m512i a[9], __m512i b[9], __m512i out[9],const __m512i P[9]){
