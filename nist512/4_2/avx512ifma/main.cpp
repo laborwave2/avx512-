@@ -6,8 +6,8 @@ int main() {
 
 
     bench_cycles_512("mulmodifma4_2", mulmodifma4_2, data, 100);
+    bench_vs_gmp_4_2_avx512ifma(2000, 42);
 
  
     return 0;
 }
-

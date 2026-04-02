@@ -59,8 +59,11 @@ static void extract_lane_limbs18(const __m512i vec[18], int lane, uint64_t limbs
 }
 
 static bool run_known_cases() {
-    Mpz p, A, B, Ref, Out, OutMod;
+    Mpz p, R, A, B, Ref, Out, OutMod;
     build_modulus(p.v);
+    mpz_set_ui(R.v, 1);
+    mpz_mul_2exp(R.v, R.v, 522);
+    mpz_mod(R.v, R.v, p.v);
 
     auto pack_const = [](__m512i a[18], const uint64_t limbs[18]) {
         alignas(64) uint64_t lanes[8];
@@ -111,6 +114,8 @@ static bool run_known_cases() {
 
             limbs18_to_mpz_base29_top12_u64(Out.v, out_limbs);
             mpz_mod(OutMod.v, Out.v, p.v);
+            mpz_mul(OutMod.v, OutMod.v, R.v);
+            mpz_mod(OutMod.v, OutMod.v, p.v);
 
             if (mpz_cmp(OutMod.v, Ref.v) != 0) {
                 std::cerr << "[FAIL][8_1 avx512F] " << tc.name << " lane=" << lane << " mismatch\n";
@@ -124,8 +129,11 @@ static bool run_known_cases() {
 static bool run_random(std::size_t iterations, uint64_t seed) {
     std::mt19937_64 rng(seed);
 
-    Mpz p, A, B, Ref, Out, OutMod;
+    Mpz p, R, A, B, Ref, Out, OutMod;
     build_modulus(p.v);
+    mpz_set_ui(R.v, 1);
+    mpz_mul_2exp(R.v, R.v, 522);
+    mpz_mod(R.v, R.v, p.v);
 
     for (std::size_t it = 0; it < iterations; ++it) {
         alignas(64) __m512i a[18], b[18], out[18];
@@ -155,6 +163,8 @@ static bool run_random(std::size_t iterations, uint64_t seed) {
 
             limbs18_to_mpz_base29_top12_u64(Out.v, out_limbs);
             mpz_mod(OutMod.v, Out.v, p.v);
+            mpz_mul(OutMod.v, OutMod.v, R.v);
+            mpz_mod(OutMod.v, OutMod.v, p.v);
 
             if (mpz_cmp(OutMod.v, Ref.v) != 0) {
                 std::cerr << "[FAIL][8_1 avx512F] it=" << it << " lane=" << lane << " mismatch\n";
